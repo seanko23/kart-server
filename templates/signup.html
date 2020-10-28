@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>KRRP ELO viewer</title>
+{% endblock %}
+
+{% block body %}
+<div class="content">
+	<h1 style="text-align: center">Sign Up</h1>
+	
+	{% if pass_list | length>=1 %}
+		{% if pass_list[0] != pass_list[1] %}
+			<h3>Error! Unmatching Passwords</h3>
+		{% endif %}
+	{% endif %}
+
+    <div class="form"></div>
+		<form action="/signin/signup/" method='POST'>
+			Username: <input type='text' name='username' id='username'>
+			<br>
+			Password: <input type='text' name='password' id='password'>
+			<br>
+			Confirm Password: <input type='text' name='confirm_password' id='confirm_password'>
+			<br>
+			<input type='submit' value='Sign Up'>
+		</form>
+</div>
+{% endblock %}
