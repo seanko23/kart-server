@@ -6,14 +6,27 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///records.db'
 db = SQLAlchemy(app)
 
-class MapRecords(db.Model):
+class User(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	username = db.Column(db.String(15), nullable=False)
 	password = db.Column(db.String(20), nullable=False)
+	#ign = db.Column(db.String(15), nullable=False, default='N/A')
+	date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+	def __repr__(self):
+		return 'User id:' + str(self.id) +' and username: ' + self.username
+
+class MapRecords(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
 	ign = db.Column(db.String(15), nullable=False, default='N/A')
-	map1 = db.Column(db.String(7), nullable=False, default='N/A')
-	map2 = db.Column(db.String(7), nullable=False, default='N/A')
-	map3 = db.Column(db.String(7), nullable=False, default='N/A')
+	map1 = db.Column(db.Float, nullable=False, default='N/A')
+	map2 = db.Column(db.Float, nullable=False, default='N/A')
+	map3 = db.Column(db.Float, nullable=False, default='N/A')
+	map4 = db.Column(db.Float, nullable=False, default='N/A')
+	map5 = db.Column(db.Float, nullable=False, default='N/A')
+	map6 = db.Column(db.Float, nullable=False, default='N/A')
+	map7 = db.Column(db.Float, nullable=False, default='N/A')
+	map8 = db.Column(db.Float, nullable=False, default='N/A')
 	date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 	def __repr__(self):
@@ -30,7 +43,7 @@ def signin():
 	if request.method == 'POST':
 		post_username = request.form['username']
 		post_password = request.form['password']
-		#existing_username = MapRecords.query.
+		#existing_username = User.query.
 		#query
 		#exisitng_password = #query
 
@@ -48,7 +61,7 @@ def signup():
 		post_password = request.form['password']
 		post_confirm_password = request.form['confirm_password']
 		if post_password == post_confirm_password:
-			new_user = MapRecords(username=post_username, password=post_password)
+			new_user = User(username=post_username, password=post_password)
 			db.session.add(new_user)
 			db.session.commit()
 			return redirect('/signin')
