@@ -1,36 +1,9 @@
 from flask import Flask, render_template, request, redirect
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///records.db'
 db = SQLAlchemy(app)
-
-class User(db.Model):
-	id = db.Column(db.Integer, primary_key=True)
-	username = db.Column(db.String(15), nullable=False)
-	password = db.Column(db.String(20), nullable=False)
-	#ign = db.Column(db.String(15), nullable=False, default='N/A')
-	date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-
-	def __repr__(self):
-		return 'User id:' + str(self.id) +' and username: ' + self.username
-
-class MapRecords(db.Model):
-	id = db.Column(db.Integer, primary_key=True)
-	ign = db.Column(db.String(15), nullable=False, default='N/A')
-	map1 = db.Column(db.Float, nullable=False, default='N/A')
-	map2 = db.Column(db.Float, nullable=False, default='N/A')
-	map3 = db.Column(db.Float, nullable=False, default='N/A')
-	map4 = db.Column(db.Float, nullable=False, default='N/A')
-	map5 = db.Column(db.Float, nullable=False, default='N/A')
-	map6 = db.Column(db.Float, nullable=False, default='N/A')
-	map7 = db.Column(db.Float, nullable=False, default='N/A')
-	map8 = db.Column(db.Float, nullable=False, default='N/A')
-	date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-
-	def __repr__(self):
-		return 'User id:' + str(self.id) +' and user ign: ' + self.ign
 
 @app.route('/')
 def index():
@@ -54,6 +27,7 @@ def signin():
 def visitor():
 	return render_template("visitor.html")
 
+
 @app.route('/signin/signup/', methods=['POST', 'GET'])
 def signup():
 	if request.method == 'POST':
@@ -70,13 +44,6 @@ def signup():
 			return render_template('signup.html', pass_list=pass_list)
 	else:
 		return render_template('signup.html')
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
