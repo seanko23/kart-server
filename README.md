@@ -20,3 +20,6 @@ relationship constraints
 https://docs.sqlalchemy.org/en/13/orm/basic_relationships.html
 
 one to one relationship
+
+
+The Dataset may have to be restructured: User Model should be filled in at once (includes ign)

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>KRRP ELO viewer</title>
+{% endblock %}
+
+{% block body %}
+<div class="content">
+    <h1 style="text-align: center">Account Summary</h1>
+    
+    <h2 style="text-align: center">Hello, {{name}}</h2>
+	
+
+    <div class="form"></div>
+        <form action="/signin/account/" method='POST'></form>
+            <a href='/signin/account/records/'>Update Records</a>
+            <br>
+            <a href='/signin/account/chart'>Charts</a>
+            <br>
+            <a href='/signin/account/graph'>Graphs</a>
+            <br>
+            <!-- <a href='/signin/account/advice'>Advice</a> -->
+            <br>
+            <!-- create setting page to change password -->
+		</form>
+</div>
+
+{% endblock %}
