@@ -54,6 +54,7 @@ def graph():
 
 @app.route('/signin/account/records/', methods=['POST', 'GET'])
 def records():
+	from model import User, MapRecords
 	if request.method == 'POST':
 		print('HELLO')
 		post_ign = request.form['user_ign']
@@ -67,8 +68,11 @@ def records():
 		post_map8 = request.form['map8_record']
 		user = User.query.filter_by(ign=post_ign).first()
 		new_records = MapRecords(user=user, map1=post_map1, map2=post_map2, map3=post_map3, map4=post_map4, map5=post_map5, map6=post_map6, map7=post_map7, map8=post_map8)
-		db.session.add(new_records)
-		db.session.commit()
+		cur_db = db.session.object_session(new_records)
+		cur_db.add(new_records)
+		cur_db.commit()
+		# db.session.add(new_records)
+		# db.session.commit()
 		return redirect('/signin')
 
 	return render_template('records.html')
