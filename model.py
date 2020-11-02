@@ -1,22 +1,26 @@
 from app import db
 from datetime import datetime
+import maps
+import util.util as util
 
 
-class User(db.Model):
+class Users(db.Model):
+	__tablename__ = 'users'
 	id = db.Column(db.Integer, primary_key=True)
 	username = db.Column(db.String(15), nullable=False, unique=True)
 	password = db.Column(db.String(20), nullable=False)
 	ign = db.Column(db.String(15), nullable=False, default='N/A', unique=True)
-	map_record = db.relationship('MapRecords', backref='user', uselist=False)
+	map_records = db.relationship('MapRecords', back_populates='users', uselist=False)
 	date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 	def __repr__(self):
-        # TODO(seanko): Add ign here
-		return f'User(username={self.username} password={self.password})'
+		return f'Users(username={self.username} password={self.password} ign={self.ign})'
 
 class MapRecords(db.Model):
+	__tablename__ = 'map_records'
 	id = db.Column(db.Integer, primary_key=True)
-	user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+	users_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+	users = db.relationship('Users', back_populates='map_records')
 	map1 = db.Column(db.Float, nullable=True)
 	map2 = db.Column(db.Float, nullable=True)
 	map3 = db.Column(db.Float, nullable=True)
@@ -27,6 +31,39 @@ class MapRecords(db.Model):
 	map8 = db.Column(db.Float, nullable=True)
 	date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-	# def __repr__(self):
-	# 	return f'MapRecords(ign={self.ign} map1={self.map1}) map2={self.map2}) map3={self.map3} ' +
-    #         f'map4={self.map4} map5={self.map5} map6={self.map6} map7={self.map7} map8={self.map8})'
+	def __repr__(self):
+		return (f'MapRecords(map1={self.map1}) map2={self.map2}) map3={self.map3} ' +
+            f'map4={self.map4} map5={self.map5} map6={self.map6} map7={self.map7} map8={self.map8})')
+
+
+def post_maps(map_data):
+	ign, maps_data = map_data['ign'], map_data['maps']
+
+	map_records = {}
+	for map_name, record in maps_data.items():
+		if maps.is_valid_record(map_name, record):
+			map_records[maps.convert_to_db_key(map_name)] = util.convert_to_int(record)
+		else:
+			raise ValueError('invalid record: {} {}'.format(map_name, record))
+
+	users = Users.query.filter_by(ign=ign).all()
+	if len(users) > 1:
+		raise ValueError('There should not be more than one record of user for each ign. ign: {}'.format(ign))
+	elif len(users) == 0:
+		raise ValueError('No user exists. ign: {}'.format(ign))
+	user = users[0]
+
+	map_models = MapRecords.query.filter_by(users=user)
+	map_models_results = map_models.all()
+	if len(map_models_results) > 1:
+		raise ValueError('There should not be more than one record for each ign. ign: {} user_id: {}'.format(ign, user.id))
+
+	if not map_models_results:
+		map_records['users'] = user
+		map_record = MapRecords(**map_records)
+		db.session.add(map_record)
+	else:
+		map_models.update(map_records)
+
+	db.session.commit()
+	return True
