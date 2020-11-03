@@ -41,7 +41,9 @@ def post_maps(map_data):
 
 	map_records = {}
 	for map_name, record in maps_data.items():
-		if maps.is_valid_record(map_name, record):
+		if not record:
+			continue
+		elif maps.is_valid_record(map_name, record):
 			map_records[maps.convert_to_db_key(map_name)] = util.convert_to_int(record)
 		else:
 			raise ValueError('invalid record: {} {}'.format(map_name, record))

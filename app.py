@@ -21,7 +21,7 @@ def signin():
 	if request.method == 'POST':
 		conn = sqlite3.connect('records.db')
 		cur = conn.cursor()    
-		cur.execute('SELECT username, password FROM users')
+		cur.execute('SELECT username, password, ign FROM users')
 		user_raw = cur.fetchall()
 		global post_username
 		post_username = request.form['username']
@@ -29,7 +29,7 @@ def signin():
 		counter = 0
 		for user in user_raw:
 			if user[0] == post_username and user[1] == post_password:
-				return redirect(url_for('account'))
+				return render_template('account.html', name=user[2])
 			else:
 				counter+=1
 				if counter == len(user_raw):
@@ -57,22 +57,6 @@ def graph():
 def records():
 	from model import Users, MapRecords
 	if request.method == 'POST':
-		# post_ign = request.form['user_ign']
-		# post_map1 = request.form['map1_record']
-		# post_map2 = request.form['map2_record']
-		# post_map3 = request.form['map3_record']
-		# post_map4 = request.form['map4_record']
-		# post_map5 = request.form['map5_record']
-		# post_map6 = request.form['map6_record']
-		# post_map7 = request.form['map7_record']
-		# post_map8 = request.form['map8_record']
-		# user = Users.query.filter_by(ign=post_ign).first()
-		# new_records = MapRecords(users=user, map1=post_map1, map2=post_map2, map3=post_map3, map4=post_map4, map5=post_map5, map6=post_map6, map7=post_map7, map8=post_map8)
-		# cur_db = db.session.object_session(new_records)
-		# cur_db.add(new_records)
-		# cur_db.commit()
-		# db.session.add(new_records)
-		# db.session.commit()
 		post_data = {
 			'ign': request.form['user_ign'],
 			'maps': {
@@ -104,11 +88,12 @@ def signup():
 	from model import Users
 	if request.method == 'POST':
 		post_username = request.form['username']
+		post_ign = request.form['ign']
 		post_password = request.form['password']
 		post_confirm_password = request.form['confirm_password']
 		if post_password == post_confirm_password:
 			from model import Users
-			new_user = Users(username=post_username, password=post_password)
+			new_user = Users(username=post_username, password=post_password, ign=post_ign)
 			db.session.add(new_user)
 			db.session.commit()
 			return redirect('/signin')
