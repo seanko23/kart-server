@@ -32,7 +32,7 @@ class MapRecords(db.Model):
 	date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 	def __repr__(self):
-		return (f'MapRecords(map1={self.map1}) map2={self.map2}) map3={self.map3} ' +
+		return (f'MapRecords(users_id={self.users_id} map1={self.map1}) map2={self.map2}) map3={self.map3} ' +
             f'map4={self.map4} map5={self.map5} map6={self.map6} map7={self.map7} map8={self.map8})')
 
 
@@ -69,3 +69,23 @@ def post_maps(map_data):
 
 	db.session.commit()
 	return True
+
+
+def get_maps(filters={}):
+	query = MapRecords.query
+	if 'igns' in filters and filters['igns']:
+		users = Users.query.filter(Users.ign.in_(set(filters['igns'])))
+		users_ids = list(map(lambda user: user.id, users))
+		query.filter(MapRecords.users_id.in_(users_ids))
+
+	map_records = query.all()
+	map_list = []
+	for map_record in map_records:
+		user_dict = {}
+		for k, v in map_record.__dict__.items():
+			if k[:3] == 'map' and v:
+				user_dict[maps.convert_to_map_name(k)] = util.convert_to_time_string(v)
+		user_dict['ign'] = map_record.users.ign
+		map_list.append(user_dict)
+
+	return {'data': map_list}

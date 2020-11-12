@@ -1,3 +1,6 @@
+from datetime import datetime as dt
+
+
 def record_to_int(df):
 	column_names = list(df.columns)[1:]
 
@@ -16,3 +19,6 @@ def convert_to_int(timestamp):
         return m * 60 + s + ss / 100.0
     except:
         return False
+
+def convert_to_time_string(float_time):
+	return dt.strftime(dt.utcfromtimestamp(float_time), "%M:%S:%f")[:8]

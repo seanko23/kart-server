@@ -1,4 +1,12 @@
-from flask import Flask, render_template, request, redirect, url_for, Response
+from flask import (
+	Flask,
+	render_template,
+	request,
+	redirect,
+	url_for,
+	Response,
+	json,
+)
 from flask_sqlalchemy import SQLAlchemy
 import sqlite3
 
@@ -112,14 +120,30 @@ def signup():
 # 		...
 # 	}
 # }
-@app.route('/maps', methods=['POST'])
+# GET: returns map records given 0 or more igns requested
+@app.route('/maps', methods=['GET', 'POST'])
 def maps():
-	from model import post_maps
+	from model import post_maps, get_maps
 	
 	if request.method == 'POST':
 		post_maps(request.get_json())
 
 		response = Response({})
+		response.headers['Access-Control-Allow-Origin'] = '*'
+		return response
+	else:
+		filters = {}
+		
+		igns = request.args.get('igns')
+		if igns:
+			filters['igns'] = igns.split(',')
+
+		map_records = get_maps(filters)
+		response = app.response_class(
+			response=json.dumps(map_records),
+			status=200,
+			mimetype='application/json'
+		)
 		response.headers['Access-Control-Allow-Origin'] = '*'
 		return response
 
