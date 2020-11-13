@@ -7,16 +7,22 @@ from flask import (
 	Response,
 	json,
 )
-from flask_sqlalchemy import SQLAlchemy
+import pandas as pd
+import numpy as np
+from sklearn import preprocessing
+from database import db, Users, MapRecords, post_maps, get_maps
 import sqlite3
 
-# TODO: encapsulate this code to create_app and call this from ifname
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///records.db'
-db = SQLAlchemy(app)
+
+def create_app():
+	app = Flask(__name__)
+	app.config['DEBUG'] = True
+	app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///records.db'
+	db.init_app(app)
+	return app
 
 	
-
+app = create_app()
 @app.route('/')
 def index():
 	# will have the ability to either login or look up an IGN
@@ -25,7 +31,6 @@ def index():
 
 @app.route('/signin', methods=['POST', 'GET']) #enable sign up
 def signin():
-	from model import Users, MapRecords
 	if request.method == 'POST':
 		conn = sqlite3.connect('records.db')
 		cur = conn.cursor()    
@@ -50,7 +55,6 @@ def signin():
 
 @app.route('/signin/account/', methods=['POST', 'GET'])
 def account():
-	from model import Users, MapRecords
 	if request.method == 'POST':
 		pass
 
@@ -63,7 +67,6 @@ def graph():
 
 @app.route('/signin/account/records/', methods=['POST', 'GET'])
 def records():
-	from model import Users, MapRecords
 	if request.method == 'POST':
 		post_data = {
 			'ign': request.form['user_ign'],
@@ -78,7 +81,6 @@ def records():
 				'쥐라기 공룡 결투장': request.form['map8_record']
 			}
 		}
-		from model import post_maps
 		post_maps(post_data)
 
 		return redirect('/signin')
@@ -93,14 +95,12 @@ def visitor():
 
 @app.route('/signin/signup/', methods=['POST', 'GET'])
 def signup():
-	from model import Users
 	if request.method == 'POST':
 		post_username = request.form['username']
 		post_ign = request.form['ign']
 		post_password = request.form['password']
 		post_confirm_password = request.form['confirm_password']
 		if post_password == post_confirm_password:
-			from model import Users
 			new_user = Users(username=post_username, password=post_password, ign=post_ign)
 			db.session.add(new_user)
 			db.session.commit()
@@ -123,7 +123,6 @@ def signup():
 # GET: returns map records given 0 or more igns requested
 @app.route('/maps', methods=['GET', 'POST'])
 def maps():
-	from model import post_maps, get_maps
 	
 	if request.method == 'POST':
 		post_maps(request.get_json())
@@ -147,5 +146,61 @@ def maps():
 		response.headers['Access-Control-Allow-Origin'] = '*'
 		return response
 
+@app.route('/chart', methods=['GET', 'POST'])
+def chart():
+	conn = sqlite3.connect('records.db')
+
+	df = pd.read_sql_query('SELECT ign, map1, map2, map3, map4, map5, map6, map7, map8 FROM map_records INNER JOIN users ON map_records.users_id = users.id', conn)
+	print(df)
+	sorter = len(df.iloc[:,1:-1].columns)+2
+	for i in list(df):
+		if i[:3] == 'map':
+			df[i] = df[i].astype(float)
+
+	for i in df.iloc[:,2:-7]:
+		scaled_values = (-(df[i] - df[i].max())/(df[i].max() - df[i].min()))
+		new_column_name = 'scaled_' + i
+		df[new_column_name] = scaled_values
+
+
+
+	sum_of_records_list = []
+	for i in df.iterrows():
+		sum_of_records = 0
+		for j in i[1][1:sorter-1]:
+			sum_of_records+=j
+		sum_of_records_list.append(sum_of_records)
+		
+	mean_value = np.mean(sum_of_records_list)
+
+	for i in range(len(sum_of_records_list)):
+		sum_of_records_list[i] = mean_value - sum_of_records_list[i]    
+
+	df['Record_Sum'] = sum_of_records_list
+
+	normalized_values = preprocessing.scale(df['Record_Sum'])
+
+	df['ELO'] = normalized_values*100 + 4000
+	new_df = df.sort_values(by=['ELO']).reset_index(drop=True)
+	ranking_df = new_df[['ign','ELO']].iloc[::-1].reset_index(drop=True)
+	ranking_df['ELO'] = round(ranking_df['ELO'],0).astype(int)
+
+	ranking_list = [i+1 for i in range(len(ranking_df))]
+	ranking_df['Rank'] = ranking_list
+
+	cols = ranking_df.columns.tolist()
+	cols = cols[-1:] + cols[:-1]
+	final_ranking_df=ranking_df[cols]
+
+	final_ranking_df = final_ranking_df.to_string(index=False)
+	
+	print(final_ranking_df)
+
+	response = Response({})
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
+
 if __name__ == '__main__':
-	app.run(debug=True)
+	app.run()

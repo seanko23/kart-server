@@ -1,8 +1,9 @@
-from app import db
+from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import maps
 import util.util as util
 
+db = SQLAlchemy()
 
 class Users(db.Model):
 	__tablename__ = 'users'
