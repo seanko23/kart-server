@@ -76,10 +76,10 @@ def get_maps(filters={}):
 	query = MapRecords.query
 	if 'igns' in filters and filters['igns']:
 		users = Users.query.filter(Users.ign.in_(set(filters['igns'])))
-		users_ids = list(map(lambda user: user.id, users))
-		query.filter(MapRecords.users_id.in_(users_ids))
-
-	map_records = query.all()
+		users_ids = set(map(lambda user: user.id, users))
+		map_records = query.filter(MapRecords.users_id.in_(users_ids))
+	else:
+		map_records = query.all()
 	map_list = []
 	for map_record in map_records:
 		user_dict = {}
@@ -89,4 +89,4 @@ def get_maps(filters={}):
 		user_dict['ign'] = map_record.users.ign
 		map_list.append(user_dict)
 
-	return {'data': map_list}
+	return map_list
