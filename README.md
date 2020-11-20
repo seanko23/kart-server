@@ -3,8 +3,21 @@
 :)
 
 Input the following lines in the correct folder of terminal to initialize the db:
-1. from app import db, ModelName
-2. db.create_all()
+1. from app import app
+2. from database import MapRecords, Users, db
+3. app.app_context().push()
+4. db.create_all()
+
+To add `trial.csv` records on the db:
+```python
+>>> from app import app
+>>> from database import db
+>>> from util.scripts import create_sample_records, delete_sample_records
+>>> app.app_context().push()
+>>> delete_sample_records() # Delete records
+>>> create_sample_records() # Create records
+```
+
 
 snake case
 camel case

@@ -101,6 +101,7 @@ def signup():
 		post_password = request.form['password']
 		post_confirm_password = request.form['confirm_password']
 		if post_password == post_confirm_password:
+			# TODO: Need to check if username exists already
 			new_user = Users(username=post_username, password=post_password, ign=post_ign)
 			db.session.add(new_user)
 			db.session.commit()

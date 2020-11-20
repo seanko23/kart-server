@@ -33,7 +33,7 @@ class MapRecords(db.Model):
 	date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 	def __repr__(self):
-		return (f'MapRecords(users_id={self.users_id} map1={self.map1}) map2={self.map2}) map3={self.map3} ' +
+		return (f'MapRecords(users_id={self.users_id} map1={self.map1} map2={self.map2} map3={self.map3} ' +
             f'map4={self.map4} map5={self.map5} map6={self.map6} map7={self.map7} map8={self.map8})')
 
 
