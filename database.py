@@ -72,7 +72,7 @@ def post_maps(map_data):
 	return True
 
 
-def get_maps(filters={}):
+def get_maps_by_users(filters={}):
 	query = MapRecords.query
 	if 'igns' in filters and filters['igns']:
 		users = Users.query.filter(Users.ign.in_(set(filters['igns'])))
@@ -90,3 +90,19 @@ def get_maps(filters={}):
 		map_list.append(user_dict)
 
 	return map_list
+
+
+def get_maps_by_map(map_name):
+	db_key = maps.convert_to_db_key(map_name)
+	if db_key:
+		map_records = MapRecords.query.order_by(getattr(MapRecords, db_key)).all()
+
+		user_list = []
+		for i, map_record in enumerate(map_records):
+			user_list.append({
+				'rank': i + 1,
+				'ign': map_record.users.ign,
+				'record': util.convert_to_time_string(getattr(map_record, db_key)),
+			})
+		return user_list
+	return {}

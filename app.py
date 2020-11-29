@@ -7,11 +7,20 @@ from flask import (
 	Response,
 	json,
 )
+from flask_cors import CORS
 import pandas as pd
 import numpy as np
 from sklearn import preprocessing
-from database import db, Users, MapRecords, post_maps, get_maps
+from database import (
+	db,
+	Users,
+	MapRecords,
+	post_maps,
+	get_maps_by_users,
+	get_maps_by_map,
+)
 import sqlite3
+
 
 
 def create_app():
@@ -19,6 +28,7 @@ def create_app():
 	app.config['DEBUG'] = True
 	app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///records.db'
 	db.init_app(app)
+	CORS(app)
 	return app
 
 	
@@ -83,7 +93,7 @@ def records():
 		}
 		post_maps(post_data)
 
-		return redirect('/signin')
+		return render_template("account.html")
 
 	return render_template('records.html')
 
@@ -129,22 +139,25 @@ def maps():
 		post_maps(request.get_json())
 
 		response = Response({})
-		response.headers['Access-Control-Allow-Origin'] = '*'
 		return response
 	else:
 		filters = {}
 		
 		igns = request.args.get('igns')
+		map_name = request.args.get('map')
 		if igns:
 			filters['igns'] = igns.split(',')
-
-		map_records = get_maps(filters)
+			map_records = get_maps_by_users(filters)
+		elif map_name:
+			map_records = get_maps_by_map(map_name)
+		else:
+			map_records = get_maps_by_users(filters)
 		response = app.response_class(
 			response=json.dumps(map_records),
 			status=200,
 			mimetype='application/json'
 		)
-		response.headers['Access-Control-Allow-Origin'] = '*'
+		
 		return response
 
 @app.route('/chart', methods=['GET', 'POST'])
@@ -181,24 +194,27 @@ def chart():
 
 	normalized_values = preprocessing.scale(df['Record_Sum'])
 
-	df['ELO'] = normalized_values*100 + 4000
-	new_df = df.sort_values(by=['ELO']).reset_index(drop=True)
-	ranking_df = new_df[['ign','ELO']].iloc[::-1].reset_index(drop=True)
-	ranking_df['ELO'] = round(ranking_df['ELO'],0).astype(int)
+	df['elo'] = normalized_values*100 + 4000
+	new_df = df.sort_values(by=['elo']).reset_index(drop=True)
+	ranking_df = new_df[['ign','elo']].iloc[::-1].reset_index(drop=True)
+	ranking_df['elo'] = round(ranking_df['elo'],0).astype(int)
 
 	ranking_list = [i+1 for i in range(len(ranking_df))]
-	ranking_df['Rank'] = ranking_list
+	ranking_df['rank'] = ranking_list
 
 	cols = ranking_df.columns.tolist()
 	cols = cols[-1:] + cols[:-1]
 	final_ranking_df=ranking_df[cols]
 
-	final_ranking_df = final_ranking_df.to_string(index=False)
+	final_ranking_df_dict = final_ranking_df.to_dict('records')
 	
-	print(final_ranking_df)
+	print(final_ranking_df_dict)
 
-	response = Response({})
-	response.headers['Access-Control-Allow-Origin'] = '*'
+	response = app.response_class(
+		response=json.dumps(final_ranking_df_dict),
+		status=200,
+		mimetype='application/json'
+	)
 	return response
 
 
