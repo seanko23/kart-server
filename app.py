@@ -10,6 +10,7 @@ from flask import (
 from flask_cors import CORS
 import pandas as pd
 import numpy as np
+import math
 from sklearn import preprocessing
 from database import (
 	db,
@@ -18,7 +19,10 @@ from database import (
 	post_maps,
 	get_maps_by_users,
 	get_maps_by_map,
+	get_elo,
+	get_home_info,
 )
+import constants
 import sqlite3
 
 
@@ -26,7 +30,7 @@ import sqlite3
 def create_app():
 	app = Flask(__name__)
 	app.config['DEBUG'] = True
-	app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///records.db'
+	app.config['SQLALCHEMY_DATABASE_URI'] = constants.DATABASE_PATH
 	db.init_app(app)
 	CORS(app)
 	return app
@@ -160,63 +164,27 @@ def maps():
 		
 		return response
 
-@app.route('/chart', methods=['GET', 'POST'])
-def chart():
-	conn = sqlite3.connect('records.db')
-
-	df = pd.read_sql_query('SELECT ign, map1, map2, map3, map4, map5, map6, map7, map8 FROM map_records INNER JOIN users ON map_records.users_id = users.id', conn)
-	print(df)
-	sorter = len(df.iloc[:,1:-1].columns)+2
-	for i in list(df):
-		if i[:3] == 'map':
-			df[i] = df[i].astype(float)
-
-	for i in df.iloc[:,2:-7]:
-		scaled_values = (-(df[i] - df[i].max())/(df[i].max() - df[i].min()))
-		new_column_name = 'scaled_' + i
-		df[new_column_name] = scaled_values
-
-
-
-	sum_of_records_list = []
-	for i in df.iterrows():
-		sum_of_records = 0
-		for j in i[1][1:sorter-1]:
-			sum_of_records+=j
-		sum_of_records_list.append(sum_of_records)
-		
-	mean_value = np.mean(sum_of_records_list)
-
-	for i in range(len(sum_of_records_list)):
-		sum_of_records_list[i] = mean_value - sum_of_records_list[i]    
-
-	df['Record_Sum'] = sum_of_records_list
-
-	normalized_values = preprocessing.scale(df['Record_Sum'])
-
-	df['elo'] = normalized_values*100 + 4000
-	new_df = df.sort_values(by=['elo']).reset_index(drop=True)
-	ranking_df = new_df[['ign','elo']].iloc[::-1].reset_index(drop=True)
-	ranking_df['elo'] = round(ranking_df['elo'],0).astype(int)
-
-	ranking_list = [i+1 for i in range(len(ranking_df))]
-	ranking_df['rank'] = ranking_list
-
-	cols = ranking_df.columns.tolist()
-	cols = cols[-1:] + cols[:-1]
-	final_ranking_df=ranking_df[cols]
-
-	final_ranking_df_dict = final_ranking_df.to_dict('records')
-	
-	print(final_ranking_df_dict)
-
+@app.route('/elo')
+def elo():
+	ranking_dict = get_elo()
 	response = app.response_class(
-		response=json.dumps(final_ranking_df_dict),
+		response=json.dumps(ranking_dict),
 		status=200,
 		mimetype='application/json'
 	)
 	return response
 
+
+@app.route('/home_info')
+def home_info():
+	ign = request.args.get('ign')
+	home_info_dict = get_home_info(ign)
+	response = app.response_class(
+		response=json.dumps(home_info_dict),
+		status=200,
+		mimetype='application/json'
+	)
+	return response
 
 
 if __name__ == '__main__':

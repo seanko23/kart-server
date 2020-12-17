@@ -5,15 +5,26 @@ import util.util as util
 db_keys = {}
 map_names = {}
 map_mins = {}
+map_levels = {}
+map_ratings = {}
+level_names = ['스타선수', '랭커', '엘리트', '수준급', 'L1']
 
 def load_dicts():
     df = pd.read_csv(constants.MAPS_CSV)
     df.minimum = df.minimum.apply(util.convert_to_int)
 
-    global db_keys, map_names, map_mins
+    global db_keys, map_names, map_mins, map_levels, map_ratings, level_names
     db_keys = dict(zip(df.key, df.name))
     map_names = dict(zip(df.name, df.key))
     map_mins = dict(zip(df.key, df.minimum))
+    map_levels = dict(zip(df.key, df.level))
+    
+    map_ratings = df[['key'] + level_names] \
+                    .set_index('key') \
+                    .T \
+                    .to_dict('list')
+    for db_key in map_ratings:
+        map_ratings[db_key] = list(map(lambda x: util.convert_to_int(x), map_ratings[db_key]))
 
 def convert_to_db_key(map_name):
     '''
@@ -72,6 +83,57 @@ def is_valid_record(map_name, record):
 
     return get_map_minimum(map_name=map_name) < int_record
 
+def get_record_level(db_key, record):
+    '''
+    Usage: 
+        get_record_level('map1', 90) -> '일반'
+        get_record_level('map1', 100.99) -> '스타선수'
+        get_record_level('map1', 100.98) -> '스타선수'
+        get_record_level('map1', 101.00) -> '랭커'
+        get_record_level('map1', 107.99) -> '수준급'
+        get_record_level('map1', 109) -> 'L1'
+        get_record_level('map1', 112) -> '일반'
+        get_record_level('map2', 115.99) -> '수준급'
+        get_record_level('map5', 112.99) -> '스타선수'
+        get_record_level('map6', 131.22) -> '수준급'
+        get_record_level('map7', 119.99) -> '엘리트'
+        get_record_level('map8', 125.99) -> '일반'
+    '''
+    minimum = get_map_minimum(db_key)
+    map_rating = map_ratings[db_key]
+    rating = level_names + ['일반']
+
+    for i in range(-1, -len(map_rating) - 1, -1):
+        if map_rating[i] < record:
+            return rating[i]
+    return rating[0] if minimum < record else '일반'
+
+def get_valid_map_keys():
+    '''
+    Usage: 
+        get_valid_map_keys() -> ['map1', 'map2', ...]
+    '''
+    return list(db_keys)
+
+def get_valid_map_names():
+    '''
+    Usage: 
+        get_valid_map_keys() -> ['map1', 'map2', ...]
+    '''
+    return list(map_names)
+
+def get_map_level(db_key):
+    '''
+    Usage: 
+        get_map_level('map1') -> 'R'
+        get_map_level('map2') -> 'L3'
+        get_map_level('map3') -> 'L2'
+        get_map_level('map4') -> 'L2'
+        get_map_level('map5') -> 'L1'
+        get_map_level('map6') -> 'L3'
+        get_map_level('invalid') -> False
+    '''
+    return map_levels[db_key] if db_key in map_levels else False
 
 load_dicts()
 if __name__ == "__main__":
@@ -98,3 +160,24 @@ if __name__ == "__main__":
     assert is_valid_record('노르테유 익스프레스', '1:45') == False
     assert is_valid_record('invalid', '1:50:30') == False
     assert is_valid_record('invalid', 'invalid') == False
+
+    assert(get_record_level('map1', 90) == '일반')
+    assert(get_record_level('map1', 100.99) == '스타선수')
+    assert(get_record_level('map1', 100.98) == '스타선수')
+    assert(get_record_level('map1', 101.00) == '랭커')
+    assert(get_record_level('map1', 107.99) == '수준급')
+    assert(get_record_level('map1', 109) == 'L1')
+    assert(get_record_level('map1', 112) == '일반')
+    assert(get_record_level('map2', 115.99) == '수준급')
+    assert(get_record_level('map5', 112.99) == '스타선수')
+    assert(get_record_level('map6', 131.22) == '수준급')
+    assert(get_record_level('map7', 119.99) == '엘리트')
+    assert(get_record_level('map8', 125.99) == '일반')
+
+    assert(get_map_level('map1') == 'R')
+    assert(get_map_level('map2') == 'L3')
+    assert(get_map_level('map3') == 'L2')
+    assert(get_map_level('map4') == 'L2')
+    assert(get_map_level('map5') == 'L1')
+    assert(get_map_level('map6') == 'L3')
+    assert(get_map_level('invalid') == False)
