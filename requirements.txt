@@ -1,6 +1,7 @@
 Flask
-gunicorn
-pandas
-numpy
 flask_cors
+gunicorn
+numpy
+pandas
+sklearn
 SQLAlchemy
