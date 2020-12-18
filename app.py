@@ -52,7 +52,7 @@ def signin():
 		post_password = request.form['password']
 
 		users = Users.query.filter_by(username=post_username, password=post_password).all()
-		if users == 1:
+		if len(users) == 1:
 			return render_template('account.html', name=users[0].ign)
 		return render_template('signin.html')
 	return render_template("signin.html")
