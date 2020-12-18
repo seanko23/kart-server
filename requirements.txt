@@ -2,3 +2,5 @@ Flask
 gunicorn
 pandas
 numpy
+flask_cors
+SQLAlchemy
