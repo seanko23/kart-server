@@ -30,6 +30,7 @@ def create_app():
 	app.config['DEBUG'] = True
 	app.config['SQLALCHEMY_DATABASE_URI'] = constants.DATABASE_PATH
 	db.init_app(app)
+	db.create_all()
 	CORS(app)
 	return app
 
