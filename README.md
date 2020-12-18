@@ -22,11 +22,12 @@ To add `trial.csv` records on the db:
 snake case
 camel case
 
-
+<strike>
 Running sqlite on terminal:
 	sqlite3 records.db
 	.tables
 	select * from map_records;
+</strike>
 
 relationship constraints
 
@@ -46,6 +47,8 @@ PostgreSQL local setup
 https://devcenter.heroku.com/articles/heroku-postgresql#set-up-postgres-on-mac
 - To connect to remote psql
  - heroku pg:psql
+- To get heroku info
+ - heroku pg:info
 - To connect to local psql
  - psql
 - To pull data from remote psql

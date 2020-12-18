@@ -23,8 +23,6 @@ from database import (
 	get_home_info,
 )
 import constants
-import sqlite3
-
 
 
 def create_app():
@@ -46,25 +44,13 @@ def index():
 @app.route('/signin', methods=['POST', 'GET']) #enable sign up
 def signin():
 	if request.method == 'POST':
-		conn = sqlite3.connect('records.db')
-		cur = conn.cursor()    
-		cur.execute('SELECT username, password, ign FROM users')
-		user_raw = cur.fetchall()
-		global post_username
 		post_username = request.form['username']
 		post_password = request.form['password']
-		counter = 0
-		for user in user_raw:
-			if user[0] == post_username and user[1] == post_password:
-				return render_template('account.html', name=user[2])
-			else:
-				counter+=1
-				if counter == len(user_raw):
-					return render_template('signin.html')
-					# have to print out that "Incorrect username/password"
-				else:
-					pass
 
+		users = Users.query.filter_by(username=post_username, password=post_password).all()
+		if users == 1:
+			return render_template('account.html', name=users[0].ign)
+		return render_template('signin.html')
 	return render_template("signin.html")
 
 @app.route('/signin/account/', methods=['POST', 'GET'])

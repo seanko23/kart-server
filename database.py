@@ -16,9 +16,9 @@ engine = sqlalchemy.create_engine(constants.DATABASE_PATH)
 class Users(db.Model):
 	__tablename__ = 'users'
 	id = db.Column(db.Integer, primary_key=True)
-	username = db.Column(db.String(15), nullable=False, unique=True)
-	password = db.Column(db.String(20), nullable=False)
-	ign = db.Column(db.String(15), nullable=False, default='N/A', unique=True)
+	username = db.Column(db.String(40), nullable=False, unique=True)
+	password = db.Column(db.String(40), nullable=False)
+	ign = db.Column(db.String(30), nullable=False, default='N/A', unique=True)
 	map_records = db.relationship('MapRecords', back_populates='users', uselist=False)
 	date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
