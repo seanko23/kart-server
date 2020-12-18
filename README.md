@@ -55,3 +55,10 @@ https://devcenter.heroku.com/articles/heroku-postgresql#set-up-postgres-on-mac
  - heroku pg:pull HEROKU_POSTGRESQL_MAGENTA mylocaldb --app sushi
 - To push data to remote psql
  - heroku pg:push mylocaldb HEROKU_POSTGRESQL_MAGENTA --app sushi
+
+
+ Heroku Cheatsheet
+ - To see server log
+  - heroku logs -t
+- To push changes on heroku
+ - git push heroku main
