@@ -62,3 +62,12 @@ https://devcenter.heroku.com/articles/heroku-postgresql#set-up-postgres-on-mac
   - heroku logs -t
 - To push changes on heroku
  - git push heroku main
+
+Flask Migrate Cheatsheet (https://flask-migrate.readthedocs.io/en/latest/)
+- To add a new column to db
+ - add a new column on the table in database.py
+ - `flask db migrate -m "<Description of the database change>"`
+ - `flask db upgrade` (This will apply changes on local db)
+ - After this, the db needs to be updated for the production database on heroku
+- To apply new changes on db
+ - `flask db upgrade`

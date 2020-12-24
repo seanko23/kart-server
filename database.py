@@ -30,19 +30,49 @@ class MapRecords(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	users_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 	users = db.relationship('Users', back_populates='map_records')
-	map1 = db.Column(db.Float, nullable=True)
-	map2 = db.Column(db.Float, nullable=True)
-	map3 = db.Column(db.Float, nullable=True)
-	map4 = db.Column(db.Float, nullable=True)
-	map5 = db.Column(db.Float, nullable=True)
-	map6 = db.Column(db.Float, nullable=True)
-	map7 = db.Column(db.Float, nullable=True)
-	map8 = db.Column(db.Float, nullable=True)
+	map1 = db.Column(db.Float, nullable=True) # 빌리지 고가의 질주
+	map2 = db.Column(db.Float, nullable=True) # WKC 코리아 서킷
+	map3 = db.Column(db.Float, nullable=True) # 사막 빙글빙글 공사장
+	map4 = db.Column(db.Float, nullable=True) # 대저택 은밀한 지하실
+	map5 = db.Column(db.Float, nullable=True) # 노르테유 익스프레스
+	map6 = db.Column(db.Float, nullable=True) # 빌리지 운명의 다리
+	map7 = db.Column(db.Float, nullable=True) # 해적 로비 절벽의 절투
+	map8 = db.Column(db.Float, nullable=True) # 쥐라기 공룡 결투장
+	map9 = db.Column(db.Float, nullable=True) # 빌리지 남산
+	map10 = db.Column(db.Float, nullable=True) # 비치 해변 드라이브
+	map11 = db.Column(db.Float, nullable=True) # WKC 싱가폴 서킷
+	map12 = db.Column(db.Float, nullable=True) # 1920 아슬아슬 비행장
+	map13 = db.Column(db.Float, nullable=True) # 차이나 라사
+	map14 = db.Column(db.Float, nullable=True) # 월드 두바이 다운타운
+	map15 = db.Column(db.Float, nullable=True) # 도검 야외수련관
+	map16 = db.Column(db.Float, nullable=True) # 빌리지 손가락
+	map17 = db.Column(db.Float, nullable=True) # 월드 리오 다운힐
+	map18 = db.Column(db.Float, nullable=True) # 문힐시티 폭우속의 질주
+	map19 = db.Column(db.Float, nullable=True) # 메카닉 잊혀진 도시의 중심부
+	map20 = db.Column(db.Float, nullable=True) # 도검 용의 길
+	map21 = db.Column(db.Float, nullable=True) # 네모 장난감 선물공장
+	map22 = db.Column(db.Float, nullable=True) # 차이나 서안 병마용
+	map23 = db.Column(db.Float, nullable=True) # 빌리지 만리장성
+	map24 = db.Column(db.Float, nullable=True) # 님프 바다신전의 비밀
+	map25 = db.Column(db.Float, nullable=True) # 포레스트 지그재그
+	map26 = db.Column(db.Float, nullable=True) # WKC 브라질 서킷
+	map27 = db.Column(db.Float, nullable=True) # 차이나 황산
+	map28 = db.Column(db.Float, nullable=True) # 해적 숨겨진 보물
+	map29 = db.Column(db.Float, nullable=True) # 빌리지 붐힐터널
+	map30 = db.Column(db.Float, nullable=True) # 황금문명 비밀장치의 위협
+	map31 = db.Column(db.Float, nullable=True) # 아이스 갈라진 빙산
+	map32 = db.Column(db.Float, nullable=True) # 네모 산타의 비밀공간
+	map33 = db.Column(db.Float, nullable=True) # 동화 이상한 나라의 문
+	map34 = db.Column(db.Float, nullable=True) # 광산 꼬불꼬불 다운힐
+	map35 = db.Column(db.Float, nullable=True) # 팩토리 미완성 5구역
+	map36 = db.Column(db.Float, nullable=True) # 포레스트 아찔한 다운힐
+	map37 = db.Column(db.Float, nullable=True) # 공동묘지 마왕의 초대
+	map38 = db.Column(db.Float, nullable=True) # 아이스 설산 다운힐
 	date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 	def __repr__(self):
 		return (f'MapRecords(users_id={self.users_id} map1={self.map1} map2={self.map2} map3={self.map3} ' +
-            f'map4={self.map4} map5={self.map5} map6={self.map6} map7={self.map7} map8={self.map8})')
+            f'map4={self.map4} map5={self.map5} map6={self.map6} map7={self.map7} map8={self.map8}...)')
 
 
 def post_maps(map_data):
@@ -132,17 +162,26 @@ def get_records_df():
 def get_normalized_ranked_df():
 	df = get_records_df()
 
+	records_to_keep = 8
 	db_keys = maps.get_valid_map_keys()
-	df = df[db_keys + ['ign']].dropna(subset=db_keys)
+	ign = df['ign']
+	df = df[db_keys] # Drop useless columns
+	df = df.loc[df.count(axis=1) >= records_to_keep] # Drop all users with less than 8 map_records data
 
 	for db_key in db_keys:
 		df[db_key] = df[db_key] - df[db_key].mean()
 
-	df['record_sum'] = df[db_keys].sum(axis=1)
+	record_sum = []
+	for record in df.to_numpy():
+		record = record[~pd.isnull(record)] # Drop all null values
+		record_sum.append((sum(np.sort(record)[:records_to_keep]))) # Keep the best 8 records
+
+	df['record_sum'] = pd.Series(record_sum)
 	mean_value = np.mean(df['record_sum'])
 
 	df['normalized_sum'] = sklearn.preprocessing.scale(mean_value - df['record_sum'])
 	df['elo'] = round(df['normalized_sum'] * 1000 + 5000)
+	df['ign'] = ign
 
 	df = df.sort_values(by=['elo'], ascending=False)
 	df['rank'] = [i + 1 for i in range(len(df))]
@@ -156,16 +195,20 @@ def get_elo():
 	return df.to_dict('records')
 
 
-def get_home_info(ign):
+def get_user_info(ign):
 	def format_rank_n_list(lst):
 		return [maps.convert_to_map_name(x.replace('_rank_n', '')) for x in lst]
 
+	response = {'is_user_registered': False, 'records_data': {}}
 	if not ign:
-		return {}
-	elif len(Users.query.filter_by(ign=ign).all()) == 0:
-		return {}
+		return response
+	elif len(Users.query.filter_by(ign=ign).all()) != 1:
+		return response
 
-	home_info = {}
+	response['is_user_registered'] = True
+	if not Users.query.filter_by(ign=ign).first().map_records:
+		return response
+
 	df = get_records_df()
 	db_keys = maps.get_valid_map_keys()
 	num_records = {}
@@ -182,7 +225,7 @@ def get_home_info(ign):
 	level_records = {}
 	map_levels = {}
 	for db_key in db_keys:
-		if db_key in record_dict and record_dict[db_key]:
+		if db_key in record_dict and record_dict[db_key] and not np.isnan(record_dict[db_key]):
 			map_name = maps.convert_to_map_name(db_key)
 			map_records[map_name] = util.convert_to_time_string(record_dict[db_key])
 			rank_records[map_name] = int(record_dict[db_key + '_rank'])
@@ -204,8 +247,8 @@ def get_home_info(ign):
 	high_50 = format_rank_n_list(n_series[n_series <= 0.5].index)
 	low_50 = format_rank_n_list(n_series[n_series > 0.5].index)
 	high_25_50 = list(set(high_50) - set(high_25))
-
-	return {
+	
+	response['records_data'] = {
 		'under_performing_map': under_performing_map,
 		'over_performing_map': over_performing_map,
 		'high_25': high_25,
@@ -217,3 +260,4 @@ def get_home_info(ign):
 		'level_records': level_records,
 		'map_levels': map_levels,
 	}
+	return response

@@ -8,6 +8,7 @@ from flask import (
 	json,
 )
 from flask_cors import CORS
+from flask_migrate import Migrate
 import pandas as pd
 import numpy as np
 import math
@@ -20,7 +21,11 @@ from database import (
 	get_maps_by_users,
 	get_maps_by_map,
 	get_elo,
-	get_home_info,
+	get_user_info,
+)
+from maps import (
+	get_level_map_dict,
+	get_map_name_minimum_dict,
 )
 import constants
 
@@ -39,6 +44,7 @@ def create_app():
 
 	
 app = create_app()
+migrate = Migrate(app, db)
 @app.route('/')
 def index():
 	# will have the ability to either login or look up an IGN
@@ -82,7 +88,8 @@ def records():
 				'노르테유 익스프레스': request.form['map5_record'],
 				'빌리지 운명의 다리': request.form['map6_record'],
 				'해적 로비 절벽의 전투': request.form['map7_record'],
-				'쥐라기 공룡 결투장': request.form['map8_record']
+				'쥐라기 공룡 결투장': request.form['map8_record'],
+				'빌리지 남산': request.form['map9_record'],
 			}
 		}
 		post_maps(post_data)
@@ -95,7 +102,6 @@ def records():
 @app.route('/visitor')
 def visitor():
 	return render_template("visitor.html")
-
 
 @app.route('/signin/signup/', methods=['POST', 'GET'])
 def signup():
@@ -164,18 +170,36 @@ def elo():
 	)
 	return response
 
-
-@app.route('/home_info')
-def home_info():
+@app.route('/user_info')
+def user_info():
 	ign = request.args.get('ign')
-	home_info_dict = get_home_info(ign)
+	user_info_dict = get_user_info(ign)
 	response = app.response_class(
-		response=json.dumps(home_info_dict),
+		response=json.dumps(user_info_dict),
 		status=200,
 		mimetype='application/json'
 	)
 	return response
 
+@app.route('/map_levels')
+def map_levels():
+	map_levels = get_level_map_dict()
+	response = app.response_class(
+		response=json.dumps(map_levels),
+		status=200,
+		mimetype='application/json'
+	)
+	return response
+
+@app.route('/map_minimums')
+def map_minimums():
+	map_minimums = get_map_name_minimum_dict()
+	response = app.response_class(
+		response=json.dumps(map_minimums),
+		status=200,
+		mimetype='application/json'
+	)
+	return response
 
 if __name__ == '__main__':
 	app.run()

@@ -5,20 +5,27 @@ import util.util as util
 db_keys = {}
 map_names = {}
 map_mins = {}
+map_name_mins = {}
 map_levels = {}
 map_ratings = {}
+level_maps = {}
 level_names = ['스타선수', '랭커', '엘리트', '수준급', 'L1']
+levels = ['R', 'L3', 'L2', 'L1']
 
 def load_dicts():
     df = pd.read_csv(constants.MAPS_CSV)
-    df.minimum = df.minimum.apply(util.convert_to_int)
+    df['minimum_int'] = df.minimum.apply(util.convert_to_int)
 
-    global db_keys, map_names, map_mins, map_levels, map_ratings, level_names
+    global db_keys, map_names, map_mins, map_name_mins, map_levels, map_ratings, level_maps, level_names
     db_keys = dict(zip(df.key, df.name))
     map_names = dict(zip(df.name, df.key))
-    map_mins = dict(zip(df.key, df.minimum))
+    map_mins = dict(zip(df.key, df.minimum_int))
+    map_name_mins = dict(zip(df.name, df.minimum))
     map_levels = dict(zip(df.key, df.level))
-    
+
+    for level in levels:
+        level_maps[level] = list(df[df.level == level].name)
+
     map_ratings = df[['key'] + level_names] \
                     .set_index('key') \
                     .T \
@@ -121,6 +128,24 @@ def get_valid_map_names():
         get_valid_map_keys() -> ['map1', 'map2', ...]
     '''
     return list(map_names)
+
+def get_level_map_dict():
+    '''
+    Usage: 
+        get_level_map_dict() -> {'R': ['빌리지 고가의 질주', '빌리지 남산', ...], 'L3': [...], ...}
+    '''
+    return level_maps
+
+def get_map_name_minimum_dict():
+    '''
+    Usage: 
+        get_map_name_minimum_dict() -> {
+            '빌리지 고가의 질주': '01:35:00',
+            'WKC 코리아 서킷': '01:45:00',
+            ...
+        }
+    '''
+    return map_name_mins
 
 def get_map_level(db_key):
     '''
