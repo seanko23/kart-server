@@ -10,12 +10,12 @@ Input the following lines in the correct folder of terminal to initialize the db
 
 To add `trial.csv` records on the db:
 ```python
->>> from app import app
->>> from database import db
->>> from util.scripts import create_sample_records, delete_sample_records
->>> app.app_context().push()
->>> delete_sample_records() # Delete records
->>> create_sample_records() # Create records
+from app import app
+from database import db
+from util.scripts import create_sample_records, delete_sample_records
+app.app_context().push()
+delete_sample_records() # Delete records
+create_sample_records() # Create records
 ```
 
 

@@ -16,14 +16,14 @@ engine = sqlalchemy.create_engine(constants.DATABASE_PATH)
 class Users(db.Model):
 	__tablename__ = 'users'
 	id = db.Column(db.Integer, primary_key=True)
-	username = db.Column(db.String(40), nullable=False, unique=True)
+	email = db.Column(db.String(320), nullable=False, unique=True)
 	password = db.Column(db.String(40), nullable=False)
 	ign = db.Column(db.String(30), nullable=False, default='N/A', unique=True)
 	map_records = db.relationship('MapRecords', back_populates='users', uselist=False)
 	date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 	def __repr__(self):
-		return f'Users(username={self.username} password={self.password} ign={self.ign})'
+		return f'Users(email={self.email} password={self.password} ign={self.ign})'
 
 class MapRecords(db.Model):
 	__tablename__ = 'map_records'
@@ -74,6 +74,39 @@ class MapRecords(db.Model):
 		return (f'MapRecords(users_id={self.users_id} map1={self.map1} map2={self.map2} map3={self.map3} ' +
             f'map4={self.map4} map5={self.map5} map6={self.map6} map7={self.map7} map8={self.map8}...)')
 
+def post_sign_in(data):
+	email, password = data['email'], data['password']
+	if not email or not password:
+		return {'error': 'email or password should not be empty'}
+
+	user = Users.query.filter_by(email=email, password=password).first()
+	if not user:
+		return {'error': 'email or password is incorrect'}
+	return {
+		'error': '',
+		'user': {'ign': user.ign}
+	}
+
+def post_sign_up(data):
+	email, password, ign = data['email'], data['password'], data['ign']
+	if not email or not password or not ign:
+		return {'error': 'email, password, ign should not be empty'}
+
+	email_user = Users.query.filter_by(email=email).first()
+	ign_user = Users.query.filter_by(ign=ign).first()
+	if email_user:
+		return {'error': f'Email {email} already exists'}
+	elif ign_user:
+		return {'error': f'Nickname {ign} already exists'}
+	
+	user = Users(email=email, password=password, ign=ign)
+	db.session.add(user)
+	db.session.commit()
+
+	return {
+		'error': '',
+		'user': {'ign': user.ign}
+	}
 
 def post_maps(map_data):
 	ign, maps_data = map_data['ign'], map_data['maps']
@@ -176,7 +209,7 @@ def get_normalized_ranked_df():
 		record = record[~pd.isnull(record)] # Drop all null values
 		record_sum.append((sum(np.sort(record)[:records_to_keep]))) # Keep the best 8 records
 
-	df['record_sum'] = pd.Series(record_sum)
+	df['record_sum'] = pd.Series(record_sum, index=df.index)
 	mean_value = np.mean(df['record_sum'])
 
 	df['normalized_sum'] = sklearn.preprocessing.scale(mean_value - df['record_sum'])

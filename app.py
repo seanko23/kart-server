@@ -22,6 +22,8 @@ from database import (
 	get_maps_by_map,
 	get_elo,
 	get_user_info,
+	post_sign_in,
+	post_sign_up,
 )
 from maps import (
 	get_level_map_dict,
@@ -54,10 +56,10 @@ def index():
 @app.route('/signin', methods=['POST', 'GET']) #enable sign up
 def signin():
 	if request.method == 'POST':
-		post_username = request.form['username']
+		post_email = request.form['email']
 		post_password = request.form['password']
 
-		users = Users.query.filter_by(username=post_username, password=post_password).all()
+		users = Users.query.filter_by(email=post_email, password=post_password).all()
 		if len(users) == 1:
 			return render_template('account.html', name=users[0].ign)
 		return render_template('signin.html')
@@ -106,13 +108,13 @@ def visitor():
 @app.route('/signin/signup/', methods=['POST', 'GET'])
 def signup():
 	if request.method == 'POST':
-		post_username = request.form['username']
+		post_email = request.form['email']
 		post_ign = request.form['ign']
 		post_password = request.form['password']
 		post_confirm_password = request.form['confirm_password']
 		if post_password == post_confirm_password:
-			# TODO: Need to check if username exists already
-			new_user = Users(username=post_username, password=post_password, ign=post_ign)
+			# TODO: Need to check if email exists already
+			new_user = Users(email=post_email, password=post_password, ign=post_ign)
 			db.session.add(new_user)
 			db.session.commit()
 			return redirect('/signin')
@@ -121,6 +123,28 @@ def signup():
 			return render_template('signup.html', pass_list=pass_list)
 	else:
 		return render_template('signup.html')
+
+@app.route('/sign_in', methods=['POST'])
+def sign_in():
+	if request.method == 'POST':
+		res = post_sign_in(request.get_json())
+		response = app.response_class(
+			response=json.dumps(res),
+			status=200,
+			mimetype='application/json'
+		)
+		return response
+
+@app.route('/sign_up', methods=['POST'])
+def sign_up():
+	if request.method == 'POST':
+		res = post_sign_up(request.get_json())
+		response = app.response_class(
+			response=json.dumps(res),
+			status=200,
+			mimetype='application/json'
+		)
+		return response
 
 # POST: accepts map data and puts it in the db. Returns error if input is invalid
 # Ex.

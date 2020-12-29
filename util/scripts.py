@@ -8,7 +8,7 @@ def create_sample_records():
 	df = pd.read_csv(TRIAL_CSV,sep=",")
 	df = record_to_int(df)
 	for index, row in df.iterrows():
-		new_user = Users(username=row['IGN'], password='sample__test__password', ign=row['IGN'])
+		new_user = Users(email=row['IGN'] + '@test.com', password='sample__test__password', ign=row['IGN'])
 		db.session.add(new_user)
 
 		new_record = MapRecords(users=new_user, map1=row['map1'], map2=row['map2'], 
