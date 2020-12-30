@@ -71,3 +71,4 @@ Flask Migrate Cheatsheet (https://flask-migrate.readthedocs.io/en/latest/)
  - After this, the db needs to be updated for the production database on heroku
 - To apply new changes on db
  - `flask db upgrade`
+ - `heroku run flask db upgrade`
