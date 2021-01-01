@@ -21,6 +21,7 @@ class Users(db.Model):
 	ign = db.Column(db.String(30), nullable=False, default='N/A', unique=True)
 	map_records = db.relationship('MapRecords', back_populates='users', uselist=False)
 	date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+	visitor_count = db.Column(db.Integer, default=0)
 
 	def __repr__(self):
 		return f'Users(email={self.email} password={self.password} ign={self.ign})'
