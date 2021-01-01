@@ -236,11 +236,13 @@ def get_user_info(ign):
 	response = {'is_user_registered': False, 'records_data': {}}
 	if not ign:
 		return response
-	elif len(Users.query.filter_by(ign=ign).all()) != 1:
+
+	user = Users.query.filter_by(ign=ign).first()
+	if not user:
 		return response
 
 	response['is_user_registered'] = True
-	if not Users.query.filter_by(ign=ign).first().map_records:
+	if not user.map_records:
 		return response
 
 	df = get_records_df()
@@ -281,7 +283,11 @@ def get_user_info(ign):
 	high_50 = format_rank_n_list(n_series[n_series <= 0.5].index)
 	low_50 = format_rank_n_list(n_series[n_series > 0.5].index)
 	high_25_50 = list(set(high_50) - set(high_25))
-	
+
+	# NOTE: Get visitor count and increment by one
+	user.visitor_count += 1
+	db.session.commit()
+
 	response['records_data'] = {
 		'under_performing_map': under_performing_map,
 		'over_performing_map': over_performing_map,
@@ -293,5 +299,6 @@ def get_user_info(ign):
 		'num_records': num_records,
 		'level_records': level_records,
 		'map_levels': map_levels,
+		'visitor_count': user.visitor_count,
 	}
 	return response
