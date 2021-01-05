@@ -1,5 +1,5 @@
 from app import app
-from constants import TRIAL_CSV
+from constants import TRIAL_CSV, TEST_ACCOUNT_PASSWORD
 from database import MapRecords, Users, db
 import pandas as pd
 from util.util import record_to_int
@@ -10,7 +10,7 @@ def create_sample_records():
 	for index, row in df.iterrows():
 		new_user = Users(
 			email=row['IGN'] + '@test2.com',
-			password='__sample__test__password__',
+			password=TEST_ACCOUNT_PASSWORD,
 			ign=f'__{row["IGN"]}__'
 		)
 		db.session.add(new_user)
@@ -24,7 +24,7 @@ def create_sample_records():
 	print('Created sample records')
 
 def delete_sample_records():
-	users = Users.query.filter_by(password='__sample__test__password__')
+	users = Users.query.filter_by(password=TEST_ACCOUNT_PASSWORD)
 	users_ids = set(map(lambda usr: usr.id, users))
 	map_records = MapRecords.query.filter(MapRecords.users_id.in_(users_ids))
 

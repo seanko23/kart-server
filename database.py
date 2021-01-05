@@ -164,12 +164,15 @@ def get_maps_by_users(filters={}):
 	return map_list
 
 
-def get_maps_by_map(map_name):
+def get_maps_by_map(map_name, filter_test_data=True):
 	db_key = maps.convert_to_db_key(map_name)
 	if db_key:
 		map_records = MapRecords.query \
 								.filter(getattr(MapRecords, db_key) != None) \
 								.order_by(getattr(MapRecords, db_key))
+
+		if filter_test_data:
+			map_records = map_records.join(Users).filter(Users.password!=constants.TEST_ACCOUNT_PASSWORD)
 
 		user_list = []
 		for i, map_record in enumerate(map_records):
@@ -223,9 +226,14 @@ def get_normalized_ranked_df():
 	return df
 
 
-def get_elo():
+def get_elo(filter_test_data=True):
 	df = get_normalized_ranked_df()
 	df = df[['rank', 'ign', 'elo']]
+
+	if filter_test_data:
+		df = df[~df.ign.str.contains('^__.*__$', regex=True)]
+		df['rank'] = [i + 1 for i in range(len(df))]
+
 	return df.to_dict('records')
 
 
