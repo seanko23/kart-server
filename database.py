@@ -1,9 +1,11 @@
 from flask_sqlalchemy import SQLAlchemy
 import sqlalchemy
+from sqlalchemy import event
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 import pandas as pd
 import sklearn
+import sklearn.preprocessing
 import numpy as np
 
 import constants
@@ -20,6 +22,7 @@ class Users(db.Model):
 	password = db.Column(db.String(40), nullable=False)
 	ign = db.Column(db.String(30), nullable=False, default='N/A', unique=True)
 	map_records = db.relationship('MapRecords', back_populates='users', uselist=False)
+	map_record_logs = db.relationship('MapRecordLogs', back_populates='users', lazy=True)
 	date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 	visitor_count = db.Column(db.Integer, default=0)
 
@@ -31,6 +34,7 @@ class MapRecords(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	users_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 	users = db.relationship('Users', back_populates='map_records')
+	map_record_logs = db.relationship('MapRecordLogs', back_populates='map_records', lazy=True)
 	map1 = db.Column(db.Float, nullable=True) # 빌리지 고가의 질주
 	map2 = db.Column(db.Float, nullable=True) # WKC 코리아 서킷
 	map3 = db.Column(db.Float, nullable=True) # 사막 빙글빙글 공사장
@@ -74,6 +78,18 @@ class MapRecords(db.Model):
 	def __repr__(self):
 		return (f'MapRecords(users_id={self.users_id} map1={self.map1} map2={self.map2} map3={self.map3} ' +
             f'map4={self.map4} map5={self.map5} map6={self.map6} map7={self.map7} map8={self.map8}...)')
+
+class MapRecordLogs(db.Model):
+	__tablename__ = 'map_record_logs'
+	id = db.Column(db.Integer, primary_key=True)
+	users = db.relationship('Users', back_populates='map_record_logs')
+	map_records = db.relationship('MapRecords', back_populates='map_record_logs')
+	users_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+	map_records_id = db.Column(db.Integer, db.ForeignKey('map_records.id'))
+	record_key = db.Column(db.String(30), nullable=False)
+	record_old = db.Column(db.Float, nullable=True)
+	record_new = db.Column(db.Float, nullable=True) 
+	date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 def post_sign_in(data):
 	email, password = data['email'], data['password']

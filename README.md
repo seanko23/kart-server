@@ -3,10 +3,10 @@
 :)
 
 Input the following lines in the correct folder of terminal to initialize the db:
-1. from app import app
-2. from database import MapRecords, Users, db
-3. app.app_context().push()
-4. db.create_all()
+from app import app
+from database import MapRecordLogs, MapRecords, Users, db
+app.app_context().push()
+db.create_all()
 
 To add `trial.csv` records on the db:
 ```python

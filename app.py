@@ -9,10 +9,10 @@ from flask import (
 )
 from flask_cors import CORS
 from flask_migrate import Migrate
-import pandas as pd
-import numpy as np
-import math
-from sklearn import preprocessing
+# import pandas as pd
+# import numpy as np
+# import math
+# from sklearn import preprocessing
 from database import (
 	db,
 	Users,
