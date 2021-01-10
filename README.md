@@ -72,3 +72,9 @@ Flask Migrate Cheatsheet (https://flask-migrate.readthedocs.io/en/latest/)
 - To apply new changes on db
  - `flask db upgrade`
  - `heroku run flask db upgrade`
+
+PostgreSQL Update Trigger
+- Whenever there is a create/update operation on MapRecords, a record of `map_record_logs` will be created.
+- Set up
+ - copy and paste `util/trigger_function.sql` in psql terminal
+ - copy and paste `util/create_trigger.sql` in psql terminal
