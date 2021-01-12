@@ -19,7 +19,7 @@ class Users(db.Model):
 	__tablename__ = 'users'
 	id = db.Column(db.Integer, primary_key=True)
 	email = db.Column(db.String(320), nullable=False, unique=True)
-	password = db.Column(db.String(40), nullable=False)
+	password = db.Column(db.String(128), nullable=False)
 	ign = db.Column(db.String(30), nullable=False, default='N/A', unique=True)
 	map_records = db.relationship('MapRecords', back_populates='users', uselist=False)
 	map_record_logs = db.relationship('MapRecordLogs', back_populates='users', lazy=True)

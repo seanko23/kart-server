@@ -46,7 +46,7 @@ def create_app():
 
 	
 app = create_app()
-migrate = Migrate(app, db)
+migrate = Migrate(app, db, compare_type=True)
 @app.route('/')
 def index():
 	# will have the ability to either login or look up an IGN
