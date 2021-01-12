@@ -29,13 +29,13 @@ from maps import (
 	get_level_map_dict,
 	get_map_name_minimum_dict,
 )
-import constants
+import app_constants
 
 
 def create_app():
 	app = Flask(__name__)
 	app.config['DEBUG'] = True
-	app.config['SQLALCHEMY_DATABASE_URI'] = constants.DATABASE_PATH
+	app.config['SQLALCHEMY_DATABASE_URI'] = app_constants.DATABASE_PATH
 	db.init_app(app)
 	CORS(app)
 	

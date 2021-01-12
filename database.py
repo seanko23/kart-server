@@ -8,12 +8,12 @@ import sklearn
 import sklearn.preprocessing
 import numpy as np
 
-import constants
+import app_constants
 import maps
 import util.util as util
 
 db = SQLAlchemy()
-engine = sqlalchemy.create_engine(constants.DATABASE_PATH)
+engine = sqlalchemy.create_engine(app_constants.DATABASE_PATH)
 
 class Users(db.Model):
 	__tablename__ = 'users'
@@ -188,7 +188,7 @@ def get_maps_by_map(map_name, filter_test_data=True):
 								.order_by(getattr(MapRecords, db_key))
 
 		if filter_test_data:
-			map_records = map_records.join(Users).filter(Users.password!=constants.TEST_ACCOUNT_PASSWORD)
+			map_records = map_records.join(Users).filter(Users.password!=app_constants.TEST_ACCOUNT_PASSWORD)
 
 		user_list = []
 		for i, map_record in enumerate(map_records):

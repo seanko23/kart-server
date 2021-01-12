@@ -1,4 +1,4 @@
-import constants
+import app_constants
 import pandas as pd
 import util.util as util
 
@@ -13,7 +13,7 @@ level_names = ['스타선수', '랭커', '엘리트', '수준급', 'L1']
 levels = ['R', 'L3', 'L2', 'L1']
 
 def load_dicts():
-    df = pd.read_csv(constants.MAPS_CSV)
+    df = pd.read_csv(app_constants.MAPS_CSV)
     df['minimum_int'] = df.minimum.apply(util.convert_to_int)
 
     global db_keys, map_names, map_mins, map_name_mins, map_levels, map_ratings, level_maps, level_names

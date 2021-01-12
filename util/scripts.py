@@ -1,5 +1,5 @@
 from app import app
-from constants import TRIAL_CSV, TEST_ACCOUNT_PASSWORD
+from app_constants import TRIAL_CSV, TEST_ACCOUNT_PASSWORD
 from database import MapRecords, Users, db
 import pandas as pd
 from util.util import record_to_int
