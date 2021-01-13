@@ -1,3 +1,4 @@
+import bcrypt
 from datetime import datetime as dt
 
 
@@ -22,3 +23,12 @@ def convert_to_int(timestamp):
 
 def convert_to_time_string(float_time):
 	return dt.strftime(dt.utcfromtimestamp(float_time), "%M:%S:%f")[:8]
+
+def hash_password(password):
+	hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+	return hashed.decode('utf-8')
+
+def is_user_password_valid(user, password):
+	hashed = user.password.encode('utf-8')
+	password = password.encode('utf-8')
+	return bcrypt.checkpw(password, hashed)

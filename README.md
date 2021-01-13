@@ -46,22 +46,24 @@ curl localhost:5000/maps \
 PostgreSQL local setup
 https://devcenter.heroku.com/articles/heroku-postgresql#set-up-postgres-on-mac
 - To connect to remote psql
- - heroku pg:psql
+ - `heroku pg:psql`
 - To get heroku info
- - heroku pg:info
+ - `heroku pg:info`
 - To connect to local psql
- - psql
+ - `psql`
 - To pull data from remote psql
- - heroku pg:pull HEROKU_POSTGRESQL_MAGENTA mylocaldb --app sushi
+ - `heroku pg:pull HEROKU_POSTGRESQL_MAGENTA mylocaldb --app sushi`
 - To push data to remote psql
- - heroku pg:push mylocaldb HEROKU_POSTGRESQL_MAGENTA --app sushi
+ - `heroku pg:push mylocaldb HEROKU_POSTGRESQL_MAGENTA --app sushi`
 
 
  Heroku Cheatsheet
  - To see server log
-  - heroku logs -t
+  - `heroku logs -t`
+- To run server python
+  - `heroku run python`
 - To push changes on heroku
- - git push heroku main
+ - `git push heroku main`
 
 Flask Migrate Cheatsheet (https://flask-migrate.readthedocs.io/en/latest/)
 - To add a new column to db

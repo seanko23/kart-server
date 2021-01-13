@@ -47,12 +47,14 @@ def create_app():
 	
 app = create_app()
 migrate = Migrate(app, db, compare_type=True)
+
+# NOTE: KART CLIENT 1.0
 @app.route('/')
 def index():
 	# will have the ability to either login or look up an IGN
 	return render_template("index.html")
 
-
+# NOTE: KART CLIENT 1.0
 @app.route('/signin', methods=['POST', 'GET']) #enable sign up
 def signin():
 	if request.method == 'POST':
@@ -65,6 +67,7 @@ def signin():
 		return render_template('signin.html')
 	return render_template("signin.html")
 
+# NOTE: KART CLIENT 1.0
 @app.route('/signin/account/', methods=['POST', 'GET'])
 def account():
 	if request.method == 'POST':
@@ -72,11 +75,12 @@ def account():
 
 	return render_template("account.html")
 
-
+# NOTE: KART CLIENT 1.0
 @app.route('/signin/account/chart')
 def graph():
 	return render_template('chart.html')
 
+# NOTE: KART CLIENT 1.0
 @app.route('/signin/account/records/', methods=['POST', 'GET'])
 def records():
 	if request.method == 'POST':
@@ -100,11 +104,12 @@ def records():
 
 	return render_template('records.html')
 
-
+# NOTE: KART CLIENT 1.0
 @app.route('/visitor')
 def visitor():
 	return render_template("visitor.html")
 
+# NOTE: KART CLIENT 1.0
 @app.route('/signin/signup/', methods=['POST', 'GET'])
 def signup():
 	if request.method == 'POST':

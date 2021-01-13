@@ -96,13 +96,17 @@ def post_sign_in(data):
 	if not email or not password:
 		return {'error': 'email or password should not be empty'}
 
-	user = Users.query.filter_by(email=email, password=password).first()
+	user = Users.query.filter_by(email=email).first()
 	if not user:
-		return {'error': 'email or password is incorrect'}
-	return {
-		'error': '',
-		'user': {'ign': user.ign}
-	}
+		return {'error': 'email is incorrect'}
+
+	if util.is_user_password_valid(user, password):
+		return {
+			'error': '',
+			'user': {'ign': user.ign}
+		}
+	else:
+		return {'error': 'password is incorrect'}
 
 def post_sign_up(data):
 	email, password, ign = data['email'], data['password'], data['ign']
@@ -115,8 +119,8 @@ def post_sign_up(data):
 		return {'error': f'Email {email} already exists'}
 	elif ign_user:
 		return {'error': f'Nickname {ign} already exists'}
-	
-	user = Users(email=email, password=password, ign=ign)
+
+	user = Users(email=email, password=util.hash_password(password), ign=ign)
 	db.session.add(user)
 	db.session.commit()
 
@@ -188,7 +192,7 @@ def get_maps_by_map(map_name, filter_test_data=True):
 								.order_by(getattr(MapRecords, db_key))
 
 		if filter_test_data:
-			map_records = map_records.join(Users).filter(Users.password!=app_constants.TEST_ACCOUNT_PASSWORD)
+			map_records = map_records.join(Users).filter(Users.ign.notlike('\_\_%\_\_'))
 
 		user_list = []
 		for i, map_record in enumerate(map_records):
