@@ -6,6 +6,7 @@ from flask import (
 	url_for,
 	Response,
 	json,
+	jsonify
 )
 from flask_cors import CORS
 from flask_migrate import Migrate
@@ -30,11 +31,16 @@ from maps import (
 	get_map_name_minimum_dict,
 )
 import app_constants
+import util.util as util
+import jwt
+import datetime
+
 
 
 def create_app():
 	app = Flask(__name__)
 	app.config['DEBUG'] = True
+	app.config['SECRET_KEY'] = 'thisisthesecretkey'
 	app.config['SQLALCHEMY_DATABASE_URI'] = app_constants.DATABASE_PATH
 	db.init_app(app)
 	CORS(app)
@@ -47,6 +53,25 @@ def create_app():
 	
 app = create_app()
 migrate = Migrate(app, db, compare_type=True)
+
+
+
+def token_required(f):
+	@wraps(f)
+	def decorated(*args, **kwargs):
+		token = request.args.get('token') #query string
+
+		if not token:
+			return jsonify({'message' : 'Token is missing!'}), 403
+		try:
+			data = jwt.decode(token, app.config['SECRET_KEY'])
+			#current_user = User.query.filter_by(public_id=data['public_id']).first()
+		except:
+			return jsonify({'message' : 'Token is invalid'}), 403
+
+		return f(*args, **kwargs)
+
+	return decorated
 
 # NOTE: KART CLIENT 1.0
 @app.route('/')
@@ -61,10 +86,15 @@ def signin():
 		post_email = request.form['email']
 		post_password = request.form['password']
 
-		users = Users.query.filter_by(email=post_email, password=post_password).all()
+		users = Users.query.filter_by(email=post_email).all()
 		if len(users) == 1:
-			return render_template('account.html', name=users[0].ign)
-		return render_template('signin.html')
+			if util.is_user_password_valid(users[0], post_password):
+				token = jwt.encode({'user' : post_email, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=1)}, app.config['SECRET_KEY'])
+				token_login = jsonify({'token' : token.decode('UTF-8')})
+				#return jsonify({'token' : token.decode('UTF-8')})
+				return token_login
+				print(token_login)
+				return render_template('account.html', name=users[0].ign)
 	return render_template("signin.html")
 
 # NOTE: KART CLIENT 1.0
@@ -119,7 +149,7 @@ def signup():
 		post_confirm_password = request.form['confirm_password']
 		if post_password == post_confirm_password:
 			# TODO: Need to check if email exists already
-			new_user = Users(email=post_email, password=post_password, ign=post_ign)
+			new_user = Users(email=post_email, password=util.hash_password(post_password), ign=post_ign)
 			db.session.add(new_user)
 			db.session.commit()
 			return redirect('/signin')
