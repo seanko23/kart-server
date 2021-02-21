@@ -34,6 +34,7 @@ import app_constants
 import util.util as util
 import jwt
 import datetime
+from functools import wraps
 
 
 
@@ -60,11 +61,12 @@ def token_required(f):
 	@wraps(f)
 	def decorated(*args, **kwargs):
 		token = request.args.get('token') #query string
+		print("This token is working fine!")
 
 		if not token:
 			return jsonify({'message' : 'Token is missing!'}), 403
 		try:
-			data = jwt.decode(token, app.config['SECRET_KEY'])
+			data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
 			#current_user = User.query.filter_by(public_id=data['public_id']).first()
 		except:
 			return jsonify({'message' : 'Token is invalid'}), 403
@@ -90,10 +92,10 @@ def signin():
 		if len(users) == 1:
 			if util.is_user_password_valid(users[0], post_password):
 				token = jwt.encode({'user' : post_email, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=1)}, app.config['SECRET_KEY'])
-				token_login = jsonify({'token' : token.decode('UTF-8')})
+				#token_login = jsonify({'token' : token.decode('UTF-8')})
 				#return jsonify({'token' : token.decode('UTF-8')})
-				return token_login
-				print(token_login)
+				return token
+				#return token_login
 				return render_template('account.html', name=users[0].ign)
 	return render_template("signin.html")
 
@@ -111,7 +113,8 @@ def graph():
 	return render_template('chart.html')
 
 # NOTE: KART CLIENT 1.0
-@app.route('/signin/account/records/', methods=['POST', 'GET'])
+@app.route('/signin/account/records', methods=['POST', 'GET'])
+@token_required
 def records():
 	if request.method == 'POST':
 		post_data = {
