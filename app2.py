@@ -33,15 +33,29 @@ from maps import (
 import app_constants
 import util.util as util
 import jwt
-import datetime
-from functools import wraps
+#from functools import wraps
 
+from datetime import (datetime, timedelta)
+
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_refresh_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
+
+#When trying to access protected URL with JWT:
+# $ export JWT="access_token(actual token)"
+# $ http GET :5000/protected Authorization:"Bearer $JWT" -> returns json file
+# $ export REFRESH_TOKEN="refresh_token(actual refresh token)"
+# $ http POST :5000/refresh Authorization:"Bearer $REFRESH_TOKEN"
 
 
 def create_app():
 	app = Flask(__name__)
 	app.config['DEBUG'] = True
-	app.config['SECRET_KEY'] = 'e1a16c7320b6b57d7088ba8c6c3d123efc91f82bb8f5e4ee' # import os -> os.urandom(24).hex()
+	app.config['JWT_SECRET_KEY'] = 'e1a16c7320b6b57d7088ba8c6c3d123efc91f82bb8f5e4ee' # import os -> os.urandom(24).hex()
+	app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=10) #timedelta(hours=1)
+	app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(minutes=20) #timedelta(days=30)
 	#app.config['REFRESH_SECRET_KEY'] = 'refreshsecretkey'
 	app.config['SQLALCHEMY_DATABASE_URI'] = app_constants.DATABASE_PATH
 	db.init_app(app)
@@ -54,27 +68,28 @@ def create_app():
 
 	
 app = create_app()
+jwt = JWTManager(app)
 migrate = Migrate(app, db, compare_type=True)
 
 
 
-def token_required(f):
-	@wraps(f)
-	def decorated(*args, **kwargs):
-		token = request.args.get('token') #query string
-		print("This token is working fine!")
+# def token_required(f):
+# 	@wraps(f)
+# 	def decorated(*args, **kwargs):
+# 		token = request.args.get('token') #query string
+# 		print("This token is working fine!")
 
-		if not token:
-			return jsonify({'message' : 'Token is missing!'}), 403
-		try:
-			data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-			#current_user = User.query.filter_by(email=data['email']).first()
-		except:
-			return jsonify({'message' : 'Token is invalid'}), 403
+# 		if not token:
+# 			return jsonify({'message' : 'Token is missing!'}), 403
+# 		try:
+# 			data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+# 			#current_user = User.query.filter_by(email=data['email']).first()
+# 		except:
+# 			return jsonify({'message' : 'Token is invalid'}), 403
 
-		return f(*args, **kwargs)
+# 		return f(*args, **kwargs)
 
-	return decorated
+# 	return decorated
 
 # NOTE: KART CLIENT 1.0
 @app.route('/')
@@ -93,13 +108,23 @@ def signin():
 		#current_user = User.query.filter_by(email=data['email']).first()
 		if len(users) == 1:
 			if util.is_user_password_valid(users[0], post_password):
-				access_token = jwt.encode({'user' : post_email, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=1)}, app.config['SECRET_KEY'])
+				#access_token = jwt.encode({'user' : post_email, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=1)}, app.config['SECRET_KEY'])
+				access_token = create_access_token(identity = post_email, fresh = True)
+				refresh_token = create_refresh_token(identity = post_email)
 				#token_login = jsonify({'token' : token.decode('UTF-8')})
 				#return jsonify({'token' : token.decode('UTF-8')})
-				return access_token
+				#return access_token
+				return jsonify(access_token=access_token, refresh_token=refresh_token)
 				#return token_login
 				return render_template('account.html', name=users[0].ign)
 	return render_template("signin.html")
+
+@app.route("/refresh", methods=["POST"])
+@jwt_required(refresh=True)
+def refresh():
+    identity = get_jwt_identity()
+    access_token = create_access_token(identity=identity)
+    return jsonify(access_token=access_token)
 
 # NOTE: KART CLIENT 1.0
 @app.route('/signin/account/', methods=['POST', 'GET'])
@@ -116,6 +141,7 @@ def graph():
 
 # NOTE: KART CLIENT 1.0
 @app.route('/signin/account/records', methods=['POST', 'GET'])
+@jwt_required()
 #@token_required
 def records():
 	if request.method == 'POST':
@@ -197,7 +223,7 @@ def sign_up():
 # }
 # GET: returns map records given 0 or more igns requested
 @app.route('/maps', methods=['GET', 'POST'])
-@token_required
+#@token_required
 def maps():
 	
 	if request.method == 'POST':
@@ -265,6 +291,11 @@ def map_minimums():
 		mimetype='application/json'
 	)
 	return response
+
+@app.route("/protected", methods=["GET"])
+@jwt_required()
+def protected():
+    return jsonify(foo="bar")
 
 if __name__ == '__main__':
 	app.run()
