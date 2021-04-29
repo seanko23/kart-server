@@ -80,3 +80,9 @@ PostgreSQL Update Trigger
 - Set up
  - copy and paste `util/trigger_function.sql` in psql terminal
  - copy and paste `util/create_trigger.sql` in psql terminal
+
+#### When trying to access protected URL with JWT:
+- `export JWT="access_token(actual token)"`
+- `http GET :5000/protected Authorization:"Bearer $JWT" -> returns json file`
+- `export REFRESH_TOKEN="refresh_token(actual refresh token)"`
+- `http POST :5000/refresh Authorization:"Bearer $REFRESH_TOKEN"`

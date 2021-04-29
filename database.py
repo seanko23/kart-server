@@ -1,4 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
+from flask_jwt_extended import (
+	create_access_token,
+	create_refresh_token,
+)
 import sqlalchemy
 from sqlalchemy import event
 from sqlalchemy.orm import sessionmaker
@@ -101,9 +105,15 @@ def post_sign_in(data):
 		return {'error': 'email is incorrect'}
 
 	if util.is_user_password_valid(user, password):
+		access_token = create_access_token(identity=user.email, fresh=True)
+		refresh_token = create_refresh_token(identity=user.email)
 		return {
 			'error': '',
-			'user': {'ign': user.ign}
+			'user': {
+				'access_token': access_token,
+				'refresh_token': refresh_token,
+				'ign': user.ign,
+			},
 		}
 	else:
 		return {'error': 'password is incorrect'}
@@ -124,9 +134,15 @@ def post_sign_up(data):
 	db.session.add(user)
 	db.session.commit()
 
+	access_token = create_access_token(identity=user.email, fresh=True)
+	refresh_token = create_refresh_token(identity=user.email)
 	return {
 		'error': '',
-		'user': {'ign': user.ign}
+		'user': {
+			'access_token': access_token,
+			'refresh_token': refresh_token,
+			'ign': user.ign,
+		},
 	}
 
 def post_maps(map_data):
