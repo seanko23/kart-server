@@ -3,6 +3,7 @@ Flask
 Flask-Migrate
 flask_cors
 flask_sqlalchemy
+flask_jwt_extended
 gunicorn
 numpy
 pandas
